@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      2024-09-25
 // @description  自動搜尋網站內所有包含 http 的鏈接
-// @license      GPL
+// @license      MIT
 // @author       You
 // @match        https://www.dcard.tw/f/*
 // @icon          https://www.dcard.tw/f/
