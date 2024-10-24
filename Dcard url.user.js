@@ -212,12 +212,8 @@
                     commentCount = data.commentCount
                     console.log('link:', main_links);
                     console.log('commentCount:', commentCount);
-                    setTimeout(function () {
-                        get_main_url()
-                    }, 0);
-                    setTimeout(function () {
-                        get_comment_url()
-                    }, 0);
+                    get_main_url()
+                    get_comment_url()
                 })
                 .catch(error => {
                     console.error('無法抓取資料:', error);
