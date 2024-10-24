@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dcard url
 // @namespace    http://tampermonkey.net/
-// @version      2024-10-25 3.0
+// @version      2024-10-25 4.0
 // @description  自動搜尋網站內所有包含 http 的鏈接
 // @author       You
 // @match        https://www.dcard.tw/f/*
@@ -229,8 +229,6 @@
                 // 如果鏈接不重複則加入
                 httpLinks.push(link);
                 console.log('link:', link);
-            } else {
-                console.log('link:', link);
             }
         });
     }
@@ -252,10 +250,11 @@
                         if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
                             // 如果鏈接不重複則加入
                             httpLinks.push(urls);
-                            console.log('content:', content);
-                            console.log('urls:', urls);
+                            console.log('sub_content:', content);
+                            console.log('sub_urls:', urls);
                         } else {
-                            console.log('content:', content);
+                            console.log('sub_content:', content);
+                            console.log('sub_urls:', urls);
                         }
                     });
                 } catch (error) {
@@ -274,8 +273,11 @@
                             if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
                                 // 如果鏈接不重複則加入
                                 httpLinks.push(urls);
-                                console.log('content:', content);
-                                console.log('urls:', urls);
+                                console.log('sub__content:', content);
+                                console.log('sub__urls:', urls);
+                            } else {
+                                console.log('sub__content:', content);
+                                console.log('sub__urls:', urls);
                             }
                         });
                     } catch (error) {
@@ -298,9 +300,9 @@
             fetch(`${apiUrl}/comments?limit=${commentCount}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log('評論資料:', data);
+                    console.log('ls_main 評論資料:', data);
                     main_links = data.map(comment => comment.content);
-                    console.log('link:', main_links);
+                    console.log('ls_main link:', main_links);
                     // 提取網址
                     let urlPattern = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/g;
                     main_links.forEach(content => {
@@ -308,10 +310,11 @@
                         if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
                             // 如果鏈接不重複則加入
                             httpLinks.push(urls);
-                            console.log('content:', content);
-                            console.log('urls:', urls);
+                            console.log('ls_content:', content);
+                            console.log('ls_urls:', urls);
                         } else {
-                            console.log('content:', content);
+                            console.log('ls_content:', content);
+                            console.log('ls_urls:', urls);
                         }
                         subComment(content.subCommentCount, content.id);
                     });
@@ -335,10 +338,11 @@
                     if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
                         // 如果鏈接不重複則加入
                         httpLinks.push(urls);
-                        console.log('content:', content);
-                        console.log('urls:', urls);
+                        console.log('ge_content:', content);
+                        console.log('ge_urls:', urls);
                     } else {
-                        console.log('content:', content);
+                        console.log('ge_content:', content);
+                        console.log('ge_urls:', urls);
                     }
                     subComment(content.subCommentCount, content.id);
                 });
@@ -359,10 +363,11 @@
                         if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
                             // 如果鏈接不重複則加入
                             httpLinks.push(urls);
-                            console.log('content:', content);
-                            console.log('urls:', urls);
+                            console.log('ge__content:', content);
+                            console.log('ge__urls:', urls);
                         } else {
-                            console.log('content:', content);
+                            console.log('ge__content:', content);
+                            console.log('ge__urls:', urls);
                         }
                         subComment(content.subCommentCount, content.id);
                     });
