@@ -5,7 +5,7 @@
 // @description  自動搜尋網站內所有包含 http 的鏈接
 // @author       You
 // @match        https://www.dcard.tw/f/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=dcard.tw
+// @icon          https://www.dcard.tw/f/
 // @grant        none
 // ==/UserScript==
 
