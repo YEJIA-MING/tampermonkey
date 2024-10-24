@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dcard url
 // @namespace    http://tampermonkey.net/
-// @version      2024-10-24 4.0
+// @version      2024-10-24 5.0
 // @description  自動搜尋網站內所有包含 http 的鏈接
 // @author       You
 // @match        https://www.dcard.tw/f/*
@@ -231,6 +231,29 @@
         console.log('commentCount:', commentCount);
         if (commentCount < 30) {
             fetch(`${apiUrl}/comments?limit=$30`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('評論資料:', data);
+                    main_links = data.map(comment => comment.content);
+                    console.log('link:', main_links);
+                    // 提取網址
+                    let urlPattern = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/g;
+                    main_links.forEach(content => {
+                        let urls = content.match(urlPattern);
+                        if (urls) {
+                            httpLinks.push(link);
+                            console.log('content:', content);
+                            console.log('urls:', urls);
+                        }
+                    });
+                    let urls = content.match(urlPattern);
+                    get_main_url()
+                })
+                .catch(error => {
+                    console.error('無法抓取資料:', error);
+                });
+        } else {
+             fetch(`${apiUrl}/comments?limit=$30`)
                 .then(response => response.json())
                 .then(data => {
                     console.log('評論資料:', data);
