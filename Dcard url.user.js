@@ -228,6 +228,7 @@
 
     function get_comment_url() {
         // 按照評論數量（commentCount）來抓取網址
+        console.log('commentCount:', commentCount);
         if (commentCount < 30) {
             fetch(`${apiUrl}/comments?limit=$30`)
                 .then(response => response.json())
