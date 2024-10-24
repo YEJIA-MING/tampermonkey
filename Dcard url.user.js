@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dcard url
 // @namespace    http://tampermonkey.net/
-// @version      2024-10-25 2.0
+// @version      2024-10-25 3.0
 // @description  自動搜尋網站內所有包含 http 的鏈接
 // @author       You
 // @match        https://www.dcard.tw/f/*
@@ -15,7 +15,7 @@
     'use strict';
     const url = window.location.href; // 獲取當前網址
     const lastSegment = url.substring(url.lastIndexOf('/') + 1); // 取得最後一個 / 後面的部分
-    //    const apiUrl = `https://www.dcard.tw/service/api/v2/posts/${lastSegment}/comments?limit=30`;
+    //    const apiUrl = `https://www.dcard.tw/service/api/v2/posts/${lastSegment}/comments?limit=100`;
     const apiUrl = `https://www.dcard.tw/service/api/v2/posts/${lastSegment}`;
     console.log('apiUrl:', apiUrl);
 
@@ -53,7 +53,7 @@
 
     const input = document.createElement('input');
     input.type = 'text';
-    input.placeholder = '輸入範圍，例如18-30';
+    input.placeholder = '輸入範圍，例如18-35';
     input.style.position = 'fixed';
     input.style.top = '40px';
     input.style.right = '10px';
@@ -238,9 +238,9 @@
     }
 
     async function subComment(subCommentCount, id) {
-        let subCommentNumber = Math.min(subCommentCount, 30);
+        let subCommentNumber = Math.min(subCommentCount, 100);
         if (subCommentNumber > 0) {
-            let subCommentCount = Math.floor(subCommentCount / 30) + 1;
+            let subCommentCount = Math.floor(subCommentCount / 100) + 1;
             // 定義一個 async 函數來使用 await 語法
             const fetchComments = async () => {
                 // 初始 API 請求，不包含 `after` 參數
@@ -267,7 +267,7 @@
                 // 循環請求其他評論
                 for (let i = 1; i < subCommentCount; i++) {
                     try {
-                        const url = `${apiUrl}/comments?parentId=${id}&after=${i * 30}&limit=30`;
+                        const url = `${apiUrl}/comments?parentId=${id}&after=${i * 100}&limit=100`;
                         const response = await fetch(url);
                         const initialData = await response.json();
 
@@ -295,8 +295,8 @@
     function get_comment_url() {
         // 按照評論數量（commentCount）來抓取網址
         console.log('commentCount:', commentCount);
-        commentCount = Math.min(commentCount, 30);
-        if (commentCount <= 30) {
+        commentCount = Math.min(commentCount, 100);
+        if (commentCount <= 100) {
             fetch(`${apiUrl}/comments?limit=${commentCount}`)
                 .then(response => response.json())
                 .then(data => {
@@ -346,7 +346,7 @@
                 });
                 let score = main_links[main_links.length - 1].score;
                 let floor = main_links[main_links.length - 1].floor;
-                let mainCommentCount = Math.floor(commentCount / 30) + 1;
+                let mainCommentCount = Math.floor(commentCount / 100) + 1;
                 for (let i = 1; i < mainCommentCount; i++) {
                     let apiUrl = `https://www.dcard.tw/service/api/v2/commentRanking/posts/${lastSegment}/comments?negative=downvote&nextKey=limit%3D50%3Bnegative%3Ddownvote%3Bscore%3D${score}%3Bfloor%3D${floor}`;
                     let response = await fetch(apiUrl);
