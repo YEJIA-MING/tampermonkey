@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dcard url
 // @namespace    http://tampermonkey.net/
-// @version      2024-10-24 6.0
+// @version      2024-10-24 7.0
 // @description  自動搜尋網站內所有包含 http 的鏈接
 // @author       You
 // @match        https://www.dcard.tw/f/*
@@ -200,20 +200,31 @@
     });
     let main_links = []
     let commentCount = 0
-    fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => {
-            console.log('評論資料:', data);
-            main_links = data.links
-            commentCount = data.commentCount
-            console.log('link:', main_links);
-            console.log('commentCount:', commentCount);
-            get_main_url()
-            get_comment_url()
-        })
-        .catch(error => {
-            console.error('無法抓取資料:', error);
-        });
+
+    // 等一秒在執行
+    async function mainUrl() {
+        setTimeout(function () {
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('評論資料:', data);
+                    main_links = data.links
+                    commentCount = data.commentCount
+                    console.log('link:', main_links);
+                    console.log('commentCount:', commentCount);
+                    setTimeout(function () {
+                        get_main_url()
+                    }, 1000);
+                    setTimeout(function () {
+                        get_comment_url()
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('無法抓取資料:', error);
+                });
+        }, 2000);
+    }
+
 
     function get_main_url() {
         // 篩選不包含 "dcard" 並且 href 包含 "http" 的鏈接
@@ -226,11 +237,67 @@
         });
     }
 
+    async function subComment(subCommentCount, id) {
+        let subCommentNumber = Math.min(subCommentCount, 100);
+        if (subCommentNumber > 0) {
+            let subCommentCount = Math.floor(subCommentCount / 100) + 1;
+            // 定義一個 async 函數來使用 await 語法
+            const fetchComments = async () => {
+                // 初始 API 請求，不包含 `after` 參數
+                try {
+                    const initialResponse = await fetch(`${apiUrl}/comments?parentId=${id}&limit=${subCommentNumber}`);
+                    const initialData = await initialResponse.json();
+                    console.log('初始評論資料:', initialData);
+
+                    initialData.forEach(comment => {
+                        let urls = comment.content.match(urlPattern);
+                        if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
+                            // 如果鏈接不重複則加入
+                            httpLinks.push(urls);
+                            console.log('content:', content);
+                            console.log('urls:', urls);
+                        } else {
+                            console.log('content:', content);
+                        }
+                    });
+                } catch (error) {
+                    console.error('初始請求錯誤:', error);
+                }
+
+                // 循環請求其他評論
+                for (let i = 1; i < subCommentCount; i++) {
+                    try {
+                        const url = `${apiUrl}/comments?parentId=${id}&after=${i * 100}&limit=100`;
+                        const response = await fetch(url);
+                        const initialData = await response.json();
+
+                        initialData.forEach(comment => {
+                            let urls = comment.content.match(urlPattern);
+                            if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
+                                // 如果鏈接不重複則加入
+                                httpLinks.push(urls);
+                                console.log('content:', content);
+                                console.log('urls:', urls);
+                            }
+                        });
+                    } catch (error) {
+                        console.error('初始請求錯誤:', error);
+                    }
+                }
+
+                console.log('所有評論資料已獲取完畢');
+            };
+            // 調用函數
+            fetchComments();
+        }
+    }
+
     function get_comment_url() {
         // 按照評論數量（commentCount）來抓取網址
         console.log('commentCount:', commentCount);
-        if (commentCount < 30) {
-            fetch(`${apiUrl}/comments?limit=30`)
+        commentCount = Math.min(commentCount, 100);
+        if (commentCount <= 100) {
+            fetch(`${apiUrl}/comments?limit=${commentCount}`)
                 .then(response => response.json())
                 .then(data => {
                     console.log('評論資料:', data);
@@ -240,22 +307,50 @@
                     let urlPattern = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/g;
                     main_links.forEach(content => {
                         let urls = content.match(urlPattern);
-                        if (urls) {
-                            httpLinks.push(link);
+                        if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
+                            // 如果鏈接不重複則加入
+                            httpLinks.push(urls);
                             console.log('content:', content);
                             console.log('urls:', urls);
+                        } else {
+                            console.log('content:', content);
                         }
+                        subComment(content.subCommentCount, content.id);
                     });
-                    let urls = content.match(urlPattern);
-                    get_main_url()
                 })
                 .catch(error => {
                     console.error('無法抓取資料:', error);
                 });
         } else {
-             fetch(`${apiUrl}/comments?limit=30`)
-                .then(response => response.json())
-                .then(data => {
+            let apiUrl = `https://www.dcard.tw/service/api/v2/commentRanking/posts/${lastSegment}/comments?negative=downvote&nextKey=limit%3D50%3Bnegative%3Ddownvote`;
+
+            async function ManyComments() {
+                let response = await fetch(apiUrl);
+                let data = await response.json();
+                console.log('評論資料:', data);
+                main_links = data.map(comment => comment.content);
+                console.log('link:', main_links);
+                // 提取網址
+                let urlPattern = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/g;
+                main_links.forEach(content => {
+                    let urls = content.match(urlPattern);
+                    if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
+                        // 如果鏈接不重複則加入
+                        httpLinks.push(urls);
+                        console.log('content:', content);
+                        console.log('urls:', urls);
+                    } else {
+                        console.log('content:', content);
+                    }
+                    subComment(content.subCommentCount, content.id);
+                });
+                let score = main_links[main_links.length - 1].score;
+                let floor = main_links[main_links.length - 1].floor;
+                let mainCommentCount = Math.floor(commentCount / 100) + 1;
+                for (let i = 1; i < mainCommentCount; i++) {
+                    let apiUrl = `https://www.dcard.tw/service/api/v2/commentRanking/posts/${lastSegment}/comments?negative=downvote&nextKey=limit%3D50%3Bnegative%3Ddownvote%3Bscore%3D${score}%3Bfloor%3D${floor}`;
+                    let response = await fetch(apiUrl);
+                    let data = await response.json();
                     console.log('評論資料:', data);
                     main_links = data.map(comment => comment.content);
                     console.log('link:', main_links);
@@ -263,18 +358,18 @@
                     let urlPattern = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/g;
                     main_links.forEach(content => {
                         let urls = content.match(urlPattern);
-                        if (urls) {
-                            httpLinks.push(link);
+                        if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
+                            // 如果鏈接不重複則加入
+                            httpLinks.push(urls);
                             console.log('content:', content);
                             console.log('urls:', urls);
+                        } else {
+                            console.log('content:', content);
                         }
+                        subComment(content.subCommentCount, content.id);
                     });
-                    let urls = content.match(urlPattern);
-                    get_main_url()
-                })
-                .catch(error => {
-                    console.error('無法抓取資料:', error);
-                });
+                }
+            }
         }
         // 篩選不包含 "dcard" 並且 href 包含 "http" 的鏈接
         main_links.forEach(function (link) {
@@ -290,7 +385,8 @@
     // 點擊顯示/隱藏網址的按鈕切換顯示狀態
     toggleButton.addEventListener('click', function () {
         if (resultDiv.style.display === 'none') {
-            searchLinks(); // 每次點擊按鈕時重新搜索當前頁面的鏈接
+            // searchLinks(); // 每次點擊按鈕時重新搜索當前頁面的鏈接
+            mainUrl(); // 每次點擊按鈕時重新搜索當前頁面的鏈接
             openAllButton.style.display = 'block'; // 先顯示 "開啟所有網址" 按鈕
             resultDiv.style.display = 'block'; // 然後顯示結果
             toggleButton.innerText = '隱藏網址';
