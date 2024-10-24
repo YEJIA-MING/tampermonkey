@@ -6,6 +6,8 @@
 // @author       You
 // @match        https://www.dcard.tw/f/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=dcard.tw
+// @updateURL    https://github.com/YEJIA-MING/tampermonkey/raw/main/Dcard%20url.user.js
+// @downloadURL  https://github.com/YEJIA-MING/tampermonkey/raw/main/Dcard%20url.user.js
 // @grant        none
 // ==/UserScript==
 
