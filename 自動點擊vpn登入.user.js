@@ -7,6 +7,8 @@
 // @match        *://accounts.google.com/o/oauth2/*
 // @match        *://oauth2-chess.baifu-tech.net/oauth2/callback*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=google.com
+// @updateURL   https://github.com/YEJIA-MING/tampermonkey/blob/main/%E8%87%AA%E5%8B%95%E9%BB%9E%E6%93%8Avpn%E7%99%BB%E5%85%A5.user.js
+// @downloadURL https://github.com/YEJIA-MING/tampermonkey/blob/main/%E8%87%AA%E5%8B%95%E9%BB%9E%E6%93%8Avpn%E7%99%BB%E5%85%A5.user.js
 // @grant        none
 // ==/UserScript==
 //oauth2
