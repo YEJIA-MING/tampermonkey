@@ -214,15 +214,15 @@
                     console.log('commentCount:', commentCount);
                     setTimeout(function () {
                         get_main_url()
-                    }, 1000);
+                    }, 0);
                     setTimeout(function () {
                         get_comment_url()
-                    }, 1000);
+                    }, 0);
                 })
                 .catch(error => {
                     console.error('無法抓取資料:', error);
                 });
-        }, 2000);
+        }, 0);
     }
 
 
