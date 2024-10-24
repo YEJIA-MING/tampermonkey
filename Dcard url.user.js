@@ -233,6 +233,8 @@
                 // 如果鏈接不重複則加入
                 httpLinks.push(link);
                 console.log('link:', link);
+            } else {
+                console.log('link:', link);
             }
         });
     }
