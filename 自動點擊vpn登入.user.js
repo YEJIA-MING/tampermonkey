@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         自動點擊vpn登入
 // @namespace    http://tampermonkey.net/
-// @version      2024-08-12
+// @version      2024-08-12 01
 // @description  try to take over the world!
 // @author       You
 // @match        *://accounts.google.com/o/oauth2/*
