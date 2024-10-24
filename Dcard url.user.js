@@ -230,7 +230,7 @@
         // 按照評論數量（commentCount）來抓取網址
         console.log('commentCount:', commentCount);
         if (commentCount < 30) {
-            fetch(`${apiUrl}/comments?limit=$30`)
+            fetch(`${apiUrl}/comments?limit=30`)
                 .then(response => response.json())
                 .then(data => {
                     console.log('評論資料:', data);
@@ -253,7 +253,7 @@
                     console.error('無法抓取資料:', error);
                 });
         } else {
-             fetch(`${apiUrl}/comments?limit=$30`)
+             fetch(`${apiUrl}/comments?limit=30`)
                 .then(response => response.json())
                 .then(data => {
                     console.log('評論資料:', data);
