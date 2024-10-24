@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dcard url
 // @namespace    http://tampermonkey.net/
-// @version      2024-10-24 1.0
+// @version      2024-10-24 2.0
 // @description  自動搜尋網站內所有包含 http 的鏈接
 // @author       You
 // @match        https://www.dcard.tw/f/*
@@ -11,7 +11,7 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
     const url = window.location.href; // 獲取當前網址
     const lastSegment = url.substring(url.lastIndexOf('/') + 1); // 取得最後一個 / 後面的部分
@@ -82,7 +82,6 @@
     document.body.appendChild(button1);
 
 
-
     // 按鈕點擊事件
     button1.addEventListener('click', () => {
         if (!isObserving) {
@@ -120,7 +119,7 @@
                     if (!observer) {
                         observer = new MutationObserver(callback);
                     }
-                    observer.observe(document.body, { childList: true, subtree: true });
+                    observer.observe(document.body, {childList: true, subtree: true});
                 }
             });
             console.log('開始監測滾動與 data-key 的變化');
@@ -180,7 +179,7 @@
         httpLinks = []; // 清空鏈接陣列
 
         // 篩選不包含 "dcard" 並且 href 包含 "http" 的鏈接
-        links.forEach(function(link) {
+        links.forEach(function (link) {
             let href = link.href;
             if (href.startsWith('http') && !href.includes('dcard') && !httpLinks.includes(href)) {
                 // 如果鏈接不重複則加入
@@ -194,8 +193,8 @@
 
 
     // 點擊 "開啟所有網址" 按鈕，開啟所有網址
-    openAllButton.addEventListener('click', function() {
-        httpLinks.forEach(function(link) {
+    openAllButton.addEventListener('click', function () {
+        httpLinks.forEach(function (link) {
             window.open(link, '_blank');
         });
     });
@@ -204,22 +203,58 @@
     fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
-        console.log('評論資料:', data);
-        main_links = data.links
-        commentCount = data.commentCount
-        console.log('link:', main_links);
-        console.log('commentCount:', commentCount);
-        get_mainurl()
-    })
+            console.log('評論資料:', data);
+            main_links = data.links
+            commentCount = data.commentCount
+            console.log('link:', main_links);
+            console.log('commentCount:', commentCount);
+            get_main_url()
+            get_comment_url()
+        })
         .catch(error => {
-        console.error('無法抓取資料:', error);
-    });
-    function get_mainurl(){
-        httpLinks = []; // 清空鏈接陣列
+            console.error('無法抓取資料:', error);
+        });
 
+    function get_main_url() {
         // 篩選不包含 "dcard" 並且 href 包含 "http" 的鏈接
-        main_links.forEach(function(link) {
-            if (link.startsWith('http') && !link.includes('.jpeg')&& !link.includes('dcard') && !httpLinks.includes(link)) {
+        main_links.forEach(function (link) {
+            if (link.startsWith('http') && !link.includes('.jpeg') && !link.includes('dcard') && !httpLinks.includes(link)) {
+                // 如果鏈接不重複則加入
+                httpLinks.push(link);
+                console.log('link:', link);
+            }
+        });
+    }
+
+    function get_comment_url() {
+        // 按照評論數量（commentCount）來抓取網址
+        if (commentCount < 30) {
+            fetch(`${apiUrl}/comments?limit=$30`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('評論資料:', data);
+                    main_links = data.map(comment => comment.content);
+                    console.log('link:', main_links);
+                    // 提取網址
+                    let urlPattern = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/g;
+                    main_links.forEach(content => {
+                        let urls = content.match(urlPattern);
+                        if (urls) {
+                            httpLinks.push(link);
+                            console.log('content:', content);
+                            console.log('urls:', urls);
+                        }
+                    });
+                    let urls = content.match(urlPattern);
+                    get_main_url()
+                })
+                .catch(error => {
+                    console.error('無法抓取資料:', error);
+                });
+        }
+        // 篩選不包含 "dcard" 並且 href 包含 "http" 的鏈接
+        main_links.forEach(function (link) {
+            if (link.startsWith('http') && !link.includes('.jpeg') && !link.includes('dcard') && !httpLinks.includes(link)) {
                 // 如果鏈接不重複則加入
                 httpLinks.push(link);
                 console.log('link:', link);
@@ -229,7 +264,7 @@
 
 
     // 點擊顯示/隱藏網址的按鈕切換顯示狀態
-    toggleButton.addEventListener('click', function() {
+    toggleButton.addEventListener('click', function () {
         if (resultDiv.style.display === 'none') {
             searchLinks(); // 每次點擊按鈕時重新搜索當前頁面的鏈接
             openAllButton.style.display = 'block'; // 先顯示 "開啟所有網址" 按鈕
@@ -246,7 +281,7 @@
     function open_url() {
         'use strict';
 
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
             const buttons = document.querySelectorAll('button:contains("查看其他")');
             buttons.forEach(button => {
                 if (button) {
@@ -255,7 +290,6 @@
             });
         });
     }
-
 
 
     open_url();
