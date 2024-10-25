@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dcard url
 // @namespace    http://tampermonkey.net/
-// @version      2024-10-25 1.2
+// @version      2024-10-25 1.3
 // @description  自動搜尋網站內所有包含 http 的鏈接，自身測試使用，請勿下載。
 // @author       You
 // @match        https://www.dcard.tw/f/*
@@ -225,7 +225,7 @@
     async function mainUrl() {
         try {
             const data = await fetchWithDelay(apiUrl);
-            console.log('評論資料:', data);
+            console.log('main 評論資料:', data);
             main_links = data.links;
             commentCount = data.commentCount;
 
@@ -251,7 +251,7 @@
             const fetchComments = async (after = 0) => {
                 try {
                     const data = await fetchWithDelay(`${apiUrl}/comments?parentId=${id}&after=${after}&limit=100`);
-                    console.log('評論資料:', data);
+                    console.log('sub_評論資料:', data);
 
                     data.forEach(comment => {
                         extractUrls(comment.content);
@@ -277,10 +277,10 @@
 
         if (commentCount <= 100) {
             try {
-                const data = await fetchWithDelay(`${apiUrl}/comments?limit=${commentCount}`);
-                console.log('ls_main 評論資料:', data);
+                const data1 = await fetchWithDelay(`${apiUrl}/comments?limit=${commentCount}`);
+                console.log('ls_main 評論資料:', data1);
 
-                data.forEach(content => {
+                data1.forEach(content => {
                     extractUrls(content.content);
                     subComment(content.subCommentCount, content.id);
                 });
