@@ -336,6 +336,8 @@
                     console.log('跳過的網址:', url);
                 }
             });
+        } else {
+            console.log('未找到網址:', content);
         }
     }
 
