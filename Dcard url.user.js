@@ -274,16 +274,35 @@
     async function get_comment_url() {
         console.log('commentCount:', commentCount);
         commentCount = Math.min(commentCount, 100);
-        try {
-            const data = await fetchWithDelay(`${apiUrl}/comments?limit=${commentCount}`);
-            console.log('ls_main 評論資料:', data);
 
-            data.forEach(content => {
-                extractUrls(content.content);
-                subComment(content.subCommentCount, content.id);
-            });
-        } catch (error) {
-            console.error('無法抓取資料:', error);
+        if (commentCount <= 100) {
+            try {
+                const data = await fetchWithDelay(`${apiUrl}/comments?limit=${commentCount}`);
+                console.log('ls_main 評論資料:', data);
+
+                data.forEach(content => {
+                    extractUrls(content.content);
+                    subComment(content.subCommentCount, content.id);
+                });
+            } catch (error) {
+                console.error('無法抓取資料:', error);
+            }
+        } else {
+            let apiUrlForManyComments = `https://www.dcard.tw/service/api/v2/commentRanking/posts/${lastSegment}/comments?negative=downvote&nextKey=limit%3D50%3Bnegative%3Ddownvote`;
+
+            try {
+                const data = await fetchWithDelay(apiUrlForManyComments);
+                console.log('多條評論資料:', data);
+                main_links = data.map(comment => comment.content);
+                console.log('link:', main_links);
+
+                main_links.forEach(content => {
+                    extractUrls(content.content);
+                    subComment(content.subCommentCount, content.id);
+                });
+            } catch (error) {
+                console.error('無法抓取資料:', error);
+            }
         }
     }
 
