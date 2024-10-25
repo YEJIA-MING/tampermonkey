@@ -205,22 +205,40 @@
     let currentRequests = 0; // 當前正在進行的請求數
     const urlPattern = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/g; // URL 提取模式
 
-    async function fetchWithDelay(url) {
-        while (currentRequests >= MAX_CONCURRENT_REQUESTS) {
-            await new Promise(resolve => setTimeout(resolve, REQUEST_DELAY)); // 等待直到有請求完成
-        }
-        currentRequests++; // 增加當前請求計數
+    // async function fetchWithDelay(url) {
+    //     while (currentRequests >= MAX_CONCURRENT_REQUESTS) {
+    //         await new Promise(resolve => setTimeout(resolve, REQUEST_DELAY)); // 等待直到有請求完成
+    //     }
+    //     currentRequests++; // 增加當前請求計數
+    //
+    //     try {
+    //         const response = await fetch(url);
+    //         return await response.json();
+    //     } catch (error) {
+    //         console.error('請求錯誤:', error);
+    //         throw error; // 重新拋出錯誤以便後續處理
+    //     } finally {
+    //         currentRequests--; // 請求完成後減少計數
+    //     }
+    // }
 
-        try {
-            const response = await fetch(url);
-            return await response.json();
-        } catch (error) {
-            console.error('請求錯誤:', error);
-            throw error; // 重新拋出錯誤以便後續處理
-        } finally {
-            currentRequests--; // 請求完成後減少計數
-        }
+    async function fetchWithDelay(url, delay = 300) {
+        return new Promise((resolve, reject) => {
+            setTimeout(async () => {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    resolve(data);
+                } catch (error) {
+                    reject(error);
+                }
+            }, delay);
+        });
     }
+
 
     async function mainUrl() {
         try {
