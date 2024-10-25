@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dcard url
 // @namespace    http://tampermonkey.net/
-// @version      2024-10-25 1.3
+// @version      2024-10-25 1.4
 // @description  自動搜尋網站內所有包含 http 的鏈接，自身測試使用，請勿下載。
 // @author       You
 // @match        https://www.dcard.tw/f/*
