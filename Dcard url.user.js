@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dcard url
 // @namespace    http://tampermonkey.net/
-// @version      2024-10-25 1.4
+// @version      2024-10-25 1.5
 // @description  自動搜尋網站內所有包含 http 的鏈接，自身測試使用，請勿下載。
 // @author       You
 // @match        https://www.dcard.tw/f/*
@@ -56,7 +56,15 @@ function extractComments() {
 
 (function () {
     'use strict';
-    loadAllComments();
+    window.addEventListener('scroll', () => {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 10) {
+            console.log('已到達頁面底部');
+            // 在此觸發載入評論的請求
+            loadComments();
+        }
+    });
+
+//    loadAllComments();
     const url = window.location.href; // 獲取當前網址
     const lastSegment = url.substring(url.lastIndexOf('/') + 1); // 取得最後一個 / 後面的部分
     //    const apiUrl = `https://www.dcard.tw/service/api/v2/posts/${lastSegment}/comments?limit=100`;
