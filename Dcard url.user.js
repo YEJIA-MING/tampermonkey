@@ -12,7 +12,7 @@
 // ==/UserScript==
 async function loadAllComments() {
     // 獲取包含評論數量的元素
-    const commentCountElement = document.querySelector('.d_49_8z95ax');
+    const commentCountElement = document.querySelector('.d_49_8z95ax.d_d8_1nn1f8g.d_cn_1t.d_gk_qslrf5.d_7v_6.d_ma_24.d1vdw76m');
 
 
     const scrollDelay = 200; // 每次滾動的延遲
