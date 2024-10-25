@@ -295,10 +295,11 @@
 
         if (commentCount <= 100) {
             try {
-                const data1 = await fetchWithDelay(`${apiUrl}/comments?limit=${commentCount}`);
-                console.log('ls_main 評論資料:', data1);
+                console.log('apiUrl:', `${apiUrl}/comments?limit=${commentCount}`);
+                const data = await fetchWithDelay(`${apiUrl}/comments?limit=${commentCount}`);
+                console.log('ls_main 評論資料:', data);
 
-                data1.forEach(content => {
+                data.forEach(content => {
                     extractUrls(content.content);
                     subComment(content.subCommentCount, content.id);
                 });
