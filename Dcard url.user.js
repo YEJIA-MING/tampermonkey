@@ -18,22 +18,24 @@ async function loadAllComments() {
     const scrollDelay = 200; // 每次滾動的延遲
     let totalComments = 2000; // 預計總評論數，根據實際情況調整
     // 檢查元素是否存在
-    if (commentCountElement) {
-        // 提取文本內容
-        const commentCountText = commentCountElement.innerText;
+    setTimeout(() => {
+        if (commentCountElement) {
+            // 提取文本內容
+            const commentCountText = commentCountElement.innerText;
 
-        // 使用正則表達式提取數字
-        const match = commentCountText.match(/共 (\d+) 則留言/);
-        if (match && match[1]) {
-            const commentCount = parseInt(match[1], 10); // 轉換為整數
-            totalComments = commentCount; // 預計總評論數，根據實際情況調整
-            console.log(`評論數量: ${commentCount}`);
+            // 使用正則表達式提取數字
+            const match = commentCountText.match(/共 (\d+) 則留言/);
+            if (match && match[1]) {
+                const commentCount = parseInt(match[1], 10); // 轉換為整數
+                totalComments = commentCount; // 預計總評論數，根據實際情況調整
+                console.log(`評論數量: ${commentCount}`);
+            } else {
+                console.log('無法提取評論數量');
+            }
         } else {
-            console.log('無法提取評論數量');
+            console.log('找不到評論數量的元素');
         }
-    } else {
-        console.log('找不到評論數量的元素');
-    }
+    }, 1000);
     for (let i = 0; i < totalComments; i += 20) { // 假設每次滾動加載 20 條評論
         window.scrollTo(0, document.body.scrollHeight);
         await new Promise(resolve => setTimeout(resolve, scrollDelay)); // 等待一段時間讓評論加載
