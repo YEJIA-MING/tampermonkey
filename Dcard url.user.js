@@ -10,9 +10,51 @@
 // @downloadURL  https://update.greasyfork.org/scripts/513853/Dcard%20url.user.js
 // @updateURL    https://update.greasyfork.org/scripts/513853/Dcard%20url.meta.js
 // ==/UserScript==
+async function loadAllComments() {
+    // 獲取包含評論數量的元素
+    const commentCountElement = document.querySelector('.d_49_8z95ax');
+
+
+    const scrollDelay = 200; // 每次滾動的延遲
+    let totalComments = 2000; // 預計總評論數，根據實際情況調整
+    // 檢查元素是否存在
+    if (commentCountElement) {
+        // 提取文本內容
+        const commentCountText = commentCountElement.innerText;
+
+        // 使用正則表達式提取數字
+        const match = commentCountText.match(/共 (\d+) 則留言/);
+        if (match && match[1]) {
+            const commentCount = parseInt(match[1], 10); // 轉換為整數
+            totalComments = commentCount; // 預計總評論數，根據實際情況調整
+            console.log(`評論數量: ${commentCount}`);
+        } else {
+            console.log('無法提取評論數量');
+        }
+    } else {
+        console.log('找不到評論數量的元素');
+    }
+    for (let i = 0; i < totalComments; i += 20) { // 假設每次滾動加載 20 條評論
+        window.scrollTo(0, document.body.scrollHeight);
+        await new Promise(resolve => setTimeout(resolve, scrollDelay)); // 等待一段時間讓評論加載
+    }
+
+    // 確認所有評論已加載，然後執行提取邏輯
+    extractComments();
+}
+
+function extractComments() {
+    const comments = document.querySelectorAll('.comment-class'); // 根據實際的評論元素類名來選擇
+    comments.forEach(comment => {
+        const content = comment.innerText; // 或者其他提取邏輯
+        console.log(content);
+    });
+}
+
 
 (function () {
     'use strict';
+    loadAllComments();
     const url = window.location.href; // 獲取當前網址
     const lastSegment = url.substring(url.lastIndexOf('/') + 1); // 取得最後一個 / 後面的部分
     //    const apiUrl = `https://www.dcard.tw/service/api/v2/posts/${lastSegment}/comments?limit=100`;
