@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dcard url
 // @namespace    http://tampermonkey.net/
-// @version      2024-10-25 10.0
+// @version      2024-10-25 1.1
 // @description  自動搜尋網站內所有包含 http 的鏈接，自身測試使用，請勿下載。
 // @author       You
 // @match        https://www.dcard.tw/f/*
@@ -198,35 +198,47 @@
             window.open(link, '_blank');
         });
     });
-    let main_links = []
-    let commentCount = 0
+    let main_links = [];
+    let commentCount = 0;
+    const MAX_CONCURRENT_REQUESTS = 3; // 最大同時請求數
+    const REQUEST_DELAY = 300; // 請求之間的延遲時間（毫秒）
+    let currentRequests = 0; // 當前正在進行的請求數
+    const urlPattern = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/g; // URL 提取模式
 
-    // 等一秒在執行
-    async function mainUrl() {
-        setTimeout(function () {
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    console.log('評論資料:', data);
-                    main_links = data.links
-                    commentCount = data.commentCount
-                    console.log('link:', main_links);
-                    console.log('commentCount:', commentCount);
-                    get_main_url()
-                    get_comment_url()
-                })
-                .catch(error => {
-                    console.error('無法抓取資料:', error);
-                });
-        }, 0);
+    async function fetchWithDelay(url) {
+        while (currentRequests >= MAX_CONCURRENT_REQUESTS) {
+            await new Promise(resolve => setTimeout(resolve, REQUEST_DELAY)); // 等待直到有請求完成
+        }
+        currentRequests++; // 增加當前請求計數
+
+        try {
+            const response = await fetch(url);
+            return await response.json();
+        } catch (error) {
+            console.error('請求錯誤:', error);
+            throw error; // 重新拋出錯誤以便後續處理
+        } finally {
+            currentRequests--; // 請求完成後減少計數
+        }
     }
 
+    async function mainUrl() {
+        try {
+            const data = await fetchWithDelay(apiUrl);
+            console.log('評論資料:', data);
+            main_links = data.links;
+            commentCount = data.commentCount;
+
+            get_main_url();
+            get_comment_url();
+        } catch (error) {
+            console.error('無法抓取資料:', error);
+        }
+    }
 
     function get_main_url() {
-        // 篩選不包含 "dcard" 並且 href 包含 "http" 的鏈接
         main_links.forEach(function (link) {
             if (link.startsWith('http') && !link.includes('.jpeg') && !link.includes('dcard') && !httpLinks.includes(link)) {
-                // 如果鏈接不重複則加入
                 httpLinks.push(link);
                 console.log('link:', link);
             }
@@ -236,162 +248,57 @@
     async function subComment(subCommentCount, id) {
         let subCommentNumber = Math.min(subCommentCount, 100);
         if (subCommentNumber > 0) {
-            let subCommentCount = Math.floor(subCommentCount / 100) + 1;
-            // 定義一個 async 函數來使用 await 語法
-            const fetchComments = async () => {
-                // 初始 API 請求，不包含 `after` 參數
+            const fetchComments = async (after = 0) => {
                 try {
-                    setTimeout(async () => {
-                        const initialResponse = await fetch(`${apiUrl}/comments?parentId=${id}&limit=${subCommentNumber}`);
-                        const initialData = await initialResponse.json();
-                        console.log('初始評論資料:', initialData);
+                    const data = await fetchWithDelay(`${apiUrl}/comments?parentId=${id}&after=${after}&limit=100`);
+                    console.log('評論資料:', data);
 
-                        initialData.forEach(comment => {
-                            let urls = comment.content.match(urlPattern);
-                            if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
-                                // 如果鏈接不重複則加入
-                                httpLinks.push(urls);
-                                console.log('sub_content:', content);
-                                console.log('sub_urls:', urls);
-                            } else {
-                                console.log('sub_content:', content);
-                                console.log('sub_urls:', urls);
-                            }
-                        });
-                    }, 300);
+                    data.forEach(comment => {
+                        extractUrls(comment.content);
+                        subComment(comment.subCommentCount, comment.id);
+                    });
                 } catch (error) {
-                    console.error('初始請求錯誤:', error);
+                    console.error('請求錯誤:', error);
                 }
-
-                // 循環請求其他評論
-                for (let i = 1; i < subCommentCount; i++) {
-                    try {
-                        const url = `${apiUrl}/comments?parentId=${id}&after=${i * 100}&limit=100`;
-                        setTimeout(async () => {
-                            const response = await fetch(url);
-                            const initialData = await response.json();
-
-                            initialData.forEach(comment => {
-                                let urls = comment.content.match(urlPattern);
-                                if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
-                                    // 如果鏈接不重複則加入
-                                    httpLinks.push(urls);
-                                    console.log('sub__content:', content);
-                                    console.log('sub__urls:', urls);
-                                } else {
-                                    console.log('sub__content:', content);
-                                    console.log('sub__urls:', urls);
-                                }
-                            });
-                        }, 300);
-                    } catch (error) {
-                        console.error('初始請求錯誤:', error);
-                    }
-                }
-
-                console.log('所有評論資料已獲取完畢');
             };
-            // 調用函數
-            fetchComments();
+
+            const fetchPromises = [];
+            for (let i = 0; i < Math.ceil(subCommentNumber / 100); i++) {
+                fetchPromises.push(fetchComments(i * 100));
+            }
+            await Promise.all(fetchPromises);
+            console.log('所有評論資料已獲取完畢');
         }
     }
 
-    function get_comment_url() {
-        // 按照評論數量（commentCount）來抓取網址
+    async function get_comment_url() {
         console.log('commentCount:', commentCount);
         commentCount = Math.min(commentCount, 100);
-        if (commentCount <= 100) {
-            setTimeout(function () {
-                fetch(`${apiUrl}/comments?limit=${commentCount}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('ls_main 評論資料:', data);
-                        main_links = data.map(comment => comment.content);
-                        console.log('ls_main link:', main_links);
-                        // 提取網址
-                        let urlPattern = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/g;
-                        main_links.forEach(content => {
-                            let urls = content.match(urlPattern);
-                            if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
-                                // 如果鏈接不重複則加入
-                                httpLinks.push(urls);
-                                console.log('ls_content:', content);
-                                console.log('ls_urls:', urls);
-                            } else {
-                                console.log('ls_content:', content);
-                                console.log('ls_urls:', urls);
-                            }
-                            subComment(content.subCommentCount, content.id);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('無法抓取資料:', error);
-                    });
-            }, 300);
-        } else {
-            let apiUrl = `https://www.dcard.tw/service/api/v2/commentRanking/posts/${lastSegment}/comments?negative=downvote&nextKey=limit%3D50%3Bnegative%3Ddownvote`;
+        try {
+            const data = await fetchWithDelay(`${apiUrl}/comments?limit=${commentCount}`);
+            console.log('ls_main 評論資料:', data);
 
-            async function ManyComments() {
-                setTimeout(async () => {
-                    let response = await fetch(apiUrl);
-                    let data = await response.json();
-                    console.log('評論資料:', data);
-                    main_links = data.map(comment => comment.content);
-                    console.log('link:', main_links);
-                    // 提取網址
-                    let urlPattern = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/g;
-                    main_links.forEach(content => {
-                        let urls = content.match(urlPattern);
-                        if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
-                            // 如果鏈接不重複則加入
-                            httpLinks.push(urls);
-                            console.log('ge_content:', content);
-                            console.log('ge_urls:', urls);
-                        } else {
-                            console.log('ge_content:', content);
-                            console.log('ge_urls:', urls);
-                        }
-                        subComment(content.subCommentCount, content.id);
-                    });
-                }, 300);
-                let score = main_links[main_links.length - 1].score;
-                let floor = main_links[main_links.length - 1].floor;
-                let mainCommentCount = Math.floor(commentCount / 100) + 1;
-                for (let i = 1; i < mainCommentCount; i++) {
-                    let apiUrl = `https://www.dcard.tw/service/api/v2/commentRanking/posts/${lastSegment}/comments?negative=downvote&nextKey=limit%3D50%3Bnegative%3Ddownvote%3Bscore%3D${score}%3Bfloor%3D${floor}`;
-                    setTimeout(async () => {
-                        let response = await fetch(apiUrl);
-                        let data = await response.json();
-                        console.log('評論資料:', data);
-                        main_links = data.map(comment => comment.content);
-                        console.log('link:', main_links);
-                        // 提取網址
-                        let urlPattern = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/g;
-                        main_links.forEach(content => {
-                            let urls = content.match(urlPattern);
-                            if (urls && !urls.includes('.jpeg') && !urls.includes('dcard') && !httpLinks.includes(urls)) {
-                                // 如果鏈接不重複則加入
-                                httpLinks.push(urls);
-                                console.log('ge__content:', content);
-                                console.log('ge__urls:', urls);
-                            } else {
-                                console.log('ge__content:', content);
-                                console.log('ge__urls:', urls);
-                            }
-                            subComment(content.subCommentCount, content.id);
-                        });
-                    }, 300);
-                }
-            }
+            data.forEach(content => {
+                extractUrls(content.content);
+                subComment(content.subCommentCount, content.id);
+            });
+        } catch (error) {
+            console.error('無法抓取資料:', error);
         }
-        // 篩選不包含 "dcard" 並且 href 包含 "http" 的鏈接
-        main_links.forEach(function (link) {
-            if (link.startsWith('http') && !link.includes('.jpeg') && !link.includes('dcard') && !httpLinks.includes(link)) {
-                // 如果鏈接不重複則加入
-                httpLinks.push(link);
-                console.log('link:', link);
-            }
-        });
+    }
+
+    function extractUrls(content) {
+        let urls = content.match(urlPattern);
+        if (urls) {
+            urls.forEach(url => {
+                if (!url.includes('.jpeg') && !url.includes('dcard') && !httpLinks.includes(url)) {
+                    httpLinks.push(url);
+                    console.log('提取到的網址:', url);
+                } else {
+                    console.log('跳過的網址:', url);
+                }
+            });
+        }
     }
 
 
