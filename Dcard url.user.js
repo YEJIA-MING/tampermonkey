@@ -7,8 +7,8 @@
 // @match        https://www.dcard.tw/f/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=dcard.tw
 // @grant        none
-// @downloadURL https://update.greasyfork.org/scripts/513853/Dcard%20url.user.js
-// @updateURL https://update.greasyfork.org/scripts/513853/Dcard%20url.meta.js
+// @downloadURL  https://update.greasyfork.org/scripts/513853/Dcard%20url.user.js
+// @updateURL    https://update.greasyfork.org/scripts/513853/Dcard%20url.meta.js
 // ==/UserScript==
 
 (function () {
