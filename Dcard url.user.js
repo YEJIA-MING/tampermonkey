@@ -35,7 +35,7 @@ async function loadAllComments() {
         } else {
             console.log('找不到評論數量的元素');
         }
-    }, 1000);
+    }, 2000);
     for (let i = 0; i < totalComments; i += 20) { // 假設每次滾動加載 20 條評論
         window.scrollTo(0, document.body.scrollHeight);
         await new Promise(resolve => setTimeout(resolve, scrollDelay)); // 等待一段時間讓評論加載
