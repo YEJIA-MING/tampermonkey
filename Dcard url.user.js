@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dcard url
 // @namespace    http://tampermonkey.net/
-// @version      2024-10-25 9.0
+// @version      2024-10-25 10.0
 // @description  自動搜尋網站內所有包含 http 的鏈接，自身測試使用，請勿下載。
 // @author       You
 // @match        https://www.dcard.tw/f/*
@@ -398,6 +398,7 @@
     // 點擊顯示/隱藏網址的按鈕切換顯示狀態
     toggleButton.addEventListener('click', function () {
         if (resultDiv.style.display === 'none') {
+            httpLinks = []; // 清空鏈接陣列
             // searchLinks(); // 每次點擊按鈕時重新搜索當前頁面的鏈接
             mainUrl(); // 每次點擊按鈕時重新搜索當前頁面的鏈接
             openAllButton.style.display = 'block'; // 先顯示 "開啟所有網址" 按鈕
